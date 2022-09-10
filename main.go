@@ -5,28 +5,31 @@ import (
 	"strings"
 )
 
+// we cannot use := in package level variables
+var conferenceName = "Go Conference"
+
+const conferenceTickets = 50
+
+var remainingTickets uint = 50 // Only 0 and +ve integers
+// we can define an array by giving its size and the elemnts data tyoe that it will contain
+// In this case, have the bookings array size as 50 and all of the elements will be of string datatype inside the array
+// var bookings = [conferenceTickets]string{}
+// We can also directly insert the elements like:
+// var bookings = [conferenceTickets]string{"tom", "john"}
+// declaring arrays
+// var bookings [conferenceTickets]string
+// the issue with array is, it occupies the memory as per the memory size for all the elements even if some of the memory does not contain elements
+// this leads to poor memory management as those memory could have been useful for some other things
+// hence we move towards something called SLICE, which is same as array but with dynamic memory allocation
+var bookings []string
+
+// other ways of declaring and definign slices are:
+// var bookings = []string{}
+// bookings := []string{}
+
 func main() {
-	// Only applies to variable not constants, also cannot define the type for this syntax
-	conferenceName := "Go Conference"
-	const conferenceTickets = 50
-	var remainingTickets uint = 50 // Only 0 and +ve integers
 
-	greetUsers(conferenceName, conferenceTickets, remainingTickets)
-
-	// we can define an array by giving its size and the elemnts data tyoe that it will contain
-	// In this case, have the bookings array size as 50 and all of the elements will be of string datatype inside the array
-	// var bookings = [conferenceTickets]string{}
-	// We can also directly insert the elements like:
-	// var bookings = [conferenceTickets]string{"tom", "john"}
-	// declaring arrays
-	// var bookings [conferenceTickets]string
-	// the issue with array is, it occupies the memory as per the memory size for all the elements even if some of the memory does not contain elements
-	// this leads to poor memory management as those memory could have been useful for some other things
-	// hence we move towards something called SLICE, which is same as array but with dynamic memory allocation
-	var bookings []string
-	// other ways of declaring and definign slices are:
-	// var bookings = []string{}
-	// bookings := []string{}
+	greetUsers()
 
 	// for {}: is a inifinite loop
 	for {
@@ -40,14 +43,14 @@ func main() {
 			continue
 		}
 
-		invalidTickets, userTickets := handleTickets(remainingTickets)
+		invalidTickets, userTickets := handleTickets()
 		if invalidTickets {
 			continue
 		}
 
-		bookTickets(remainingTickets, bookings, userName, lastName, email, conferenceName, userTickets)
+		bookTickets(userName, lastName, email, userTickets)
 
-		firstNames := getFirstNames(bookings)
+		firstNames := getFirstNames()
 		fmt.Printf("See your name in our booking list: %v\n", firstNames)
 
 		if remainingTickets == 0 {
@@ -57,13 +60,13 @@ func main() {
 	}
 }
 
-func greetUsers(confName string, confTickets int, remainingTickets uint) {
-	fmt.Printf("Welcome to %v booking application\n", confName)
-	fmt.Println("We have total of", confTickets, "tickets and", remainingTickets, "are still available")
+func greetUsers() {
+	fmt.Printf("Welcome to %v booking application\n", conferenceName)
+	fmt.Println("We have total of", conferenceTickets, "tickets and", remainingTickets, "are still available")
 	fmt.Println("Get your tickets here to attend")
 }
 
-func getFirstNames(bookings []string) []string {
+func getFirstNames() []string {
 	firstNames := []string{}
 	// range: this makes the slice iterable and returns 2 values: index and the item/element of each slice at that index of the slice
 	// But, we do not need the index for this use case, hence, we can substitute the index with an _
@@ -114,7 +117,7 @@ func handleEmail() (bool, string) {
 	return err, email
 }
 
-func handleTickets(remainingTickets uint) (bool, int) {
+func handleTickets() (bool, int) {
 	err := false
 	var userTickets int
 	fmt.Println("Enter the number of tickets:")
@@ -134,7 +137,7 @@ func handleTickets(remainingTickets uint) (bool, int) {
 	return err, userTickets
 }
 
-func bookTickets(remainingTickets uint, bookings []string, userName string, lastName string, email string, conferenceName string, userTickets int) {
+func bookTickets(userName string, lastName string, email string, userTickets int) {
 	// As the userTickets is an integer, but remainingTickets is uint, hence we need to convert either one of them to other type
 	remainingTickets = remainingTickets - uint(userTickets)
 	bookings = append(bookings, userName+" "+lastName)
