@@ -1,7 +1,9 @@
 package main
 
 import (
+	"booking-app/helper"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -21,7 +23,12 @@ var remainingTickets uint = 50 // Only 0 and +ve integers
 // the issue with array is, it occupies the memory as per the memory size for all the elements even if some of the memory does not contain elements
 // this leads to poor memory management as those memory could have been useful for some other things
 // hence we move towards something called SLICE, which is same as array but with dynamic memory allocation
-var bookings []string
+// var bookings []string --> OLD VERSION CODE
+
+// Created list of maps for storing userData(user object as in javascript)
+// For creating list of data using make(), we need to pass the length as param
+// Here, we just made the list with length 0, as the data added it will increase the size similar to slice
+var bookings = make([]map[string]string, 0)
 
 // other ways of declaring and definign slices are:
 // var bookings = []string{}
@@ -33,7 +40,7 @@ func main() {
 
 	// for {}: is a inifinite loop
 	for {
-		invalidName, userName, lastName := handleUserName()
+		invalidName, userName, lastName := helper.HandleUserName()
 		if invalidName {
 			continue
 		}
@@ -74,33 +81,11 @@ func getFirstNames() []string {
 	for _, booking := range bookings {
 		// Fields: this is a method of hte string strings package which splits the the string by spaces
 		// this is similar to string,split(' ') in javascript, note the space inside rhe split
-		var names = strings.Fields(booking)
-		firstNames = append(firstNames, names[0])
+		// var names = strings.Fields(booking) ---> OLD VERSION CODE
+
+		firstNames = append(firstNames, booking["firstName"])
 	}
 	return firstNames
-}
-
-// Function in Go can return multiple values
-func handleUserName() (bool, string, string) {
-	err := false
-	var userName string
-	fmt.Println("Enter your first name:")
-	// This will not wait for the user to input data rather it executes the next line with nothing in the variable
-	// fmt.Scan(userName)
-	// This will wait for the input as it has to fill the memory
-	fmt.Scan(&userName)
-
-	var lastName string
-	fmt.Println("Enter your last name:")
-	fmt.Scan(&lastName)
-
-	isValidName := len(userName) > 2 && len(lastName) > 2
-	if !isValidName {
-		fmt.Println("The first and last name should have at least 2 characters each.")
-		err = true
-	}
-
-	return err, userName, lastName
 }
 
 func handleEmail() (bool, string) {
@@ -138,9 +123,19 @@ func handleTickets() (bool, int) {
 }
 
 func bookTickets(userName string, lastName string, email string, userTickets int) {
+
+	// Created a map with the key as a string and the value as a string
+	userData := make(map[string]string)
+	userData["firstName"] = userName
+	userData["lastName"] = lastName
+	userData["email"] = email
+	// Converting "int" data to string using the "strconv" package available by Go
+	// "10" is used to get the number in decimal, other can be "16" for hexadecimal
+	userData["userTickets"] = strconv.FormatInt(int64(userTickets), 10)
+
 	// As the userTickets is an integer, but remainingTickets is uint, hence we need to convert either one of them to other type
 	remainingTickets = remainingTickets - uint(userTickets)
-	bookings = append(bookings, userName+" "+lastName)
+	bookings = append(bookings, userData)
 
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will receive a confirmation email at %v\n", userName, lastName, userTickets, email)
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
