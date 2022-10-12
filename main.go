@@ -3,8 +3,9 @@ package main
 import (
 	"booking-app/helper"
 	"fmt"
-	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
 // we cannot use := in package level variables
@@ -28,11 +29,28 @@ var remainingTickets uint = 50 // Only 0 and +ve integers
 // Created list of maps for storing userData(user object as in javascript)
 // For creating list of data using make(), we need to pass the length as param
 // Here, we just made the list with length 0, as the data added it will increase the size similar to slice
-var bookings = make([]map[string]string, 0)
+// var bookings = make([]map[string]string, 0) ---> OLD VERSION CODE
+
+var bookings = make([]UserData, 0)
+
+// Creating a structure which can contain data of different types unlike map
+// It is basically saying to create a custom data type according to the user's need
+type UserData struct {
+	firstName       string
+	lastName        string
+	email           string
+	numberOfTickets int
+}
 
 // other ways of declaring and definign slices are:
 // var bookings = []string{}
 // bookings := []string{}
+
+// If we remove the for loop, then the main thread will stop when 1 ticket is booked, the program finishes
+// The problem with creating goroutine is, this will stop execution if the main thread stops/finishes
+// To tackle that we need to let the main thread know that we need to wait as some background process is going on
+// We need something called WaitGroup to do that
+var wg = sync.WaitGroup{}
 
 func main() {
 
@@ -55,16 +73,27 @@ func main() {
 			continue
 		}
 
-		bookTickets(userName, lastName, email, userTickets)
+		bookedUser := bookTickets(userName, lastName, email, userTickets)
+		// This will inform the main thread that it needs to wait for 1 task to finish
+		// After this we can write the "**go**" keyword to make another goroutine
+		// Similarly, we can let the main thread know how much goroutines to wait and then create them accordingly
+		wg.Add(1)
+		// the "**go**" keyword makes the block of code asynchronous by assigning it to another thread called goroutine
+		// The new thread runs in the background while the main thread conitnue to execute
+		// At some point of time the background thread will finish the execution and its output will be printed in the console
+		go sendTicket(bookedUser)
 
 		firstNames := getFirstNames()
 		fmt.Printf("See your name in our booking list: %v\n", firstNames)
+		break
 
-		if remainingTickets == 0 {
-			fmt.Println("our conference is booked out. Come back next year.")
-			break
-		}
+		// if remainingTickets == 0 {
+		// 	fmt.Println("our conference is booked out. Come back next year.")
+		// 	break
+		// }
 	}
+	// This will make the main thread to wait till all the goroutines is finished
+	wg.Wait()
 }
 
 func greetUsers() {
@@ -83,7 +112,7 @@ func getFirstNames() []string {
 		// this is similar to string,split(' ') in javascript, note the space inside rhe split
 		// var names = strings.Fields(booking) ---> OLD VERSION CODE
 
-		firstNames = append(firstNames, booking["firstName"])
+		firstNames = append(firstNames, booking.firstName)
 	}
 	return firstNames
 }
@@ -122,21 +151,37 @@ func handleTickets() (bool, int) {
 	return err, userTickets
 }
 
-func bookTickets(userName string, lastName string, email string, userTickets int) {
+func bookTickets(userName string, lastName string, email string, userTickets int) UserData {
 
 	// Created a map with the key as a string and the value as a string
-	userData := make(map[string]string)
-	userData["firstName"] = userName
-	userData["lastName"] = lastName
-	userData["email"] = email
-	// Converting "int" data to string using the "strconv" package available by Go
-	// "10" is used to get the number in decimal, other can be "16" for hexadecimal
-	userData["userTickets"] = strconv.FormatInt(int64(userTickets), 10)
+	userData := UserData{
+		firstName:       userName,
+		lastName:        lastName,
+		email:           email,
+		numberOfTickets: userTickets,
+	}
 
 	// As the userTickets is an integer, but remainingTickets is uint, hence we need to convert either one of them to other type
 	remainingTickets = remainingTickets - uint(userTickets)
 	bookings = append(bookings, userData)
+	fmt.Printf("List of bookings %v\n", bookings)
 
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will receive a confirmation email at %v\n", userName, lastName, userTickets, email)
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
+
+	return userData
+}
+
+func sendTicket(user UserData) {
+	// Waits for 5 seconds to simulate asynchronous nature of creating and sending a ticket to email
+	time.Sleep(5 * time.Second)
+	// Sprintf() will return the string that would print in the terminal rather than printing it.
+	// The returned string is kept in variable for later usage
+	ticket := fmt.Sprintf("%v tickets for %v %v", user.numberOfTickets, user.firstName, user.lastName)
+	fmt.Println("------ TICKET ------")
+	fmt.Printf("Sending ticket...\n %v \nto email address %v\n", ticket, user.email)
+	fmt.Println("------ TICKET ------")
+
+	// This will signal the waitgroup stating that thi goroutine is finished
+	wg.Done()
 }

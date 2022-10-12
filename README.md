@@ -4,11 +4,11 @@ Creating Conference booking App
 
 ### Some codes related to Go
 
-- If you have multiple .go files(e.g., main.go and helper.go) interrelated to each other, then run the command:
+- If you have multiple "**.go**" files(e.g., main.go and helper.go) interrelated to each other, then run the command:
   - `go run main.go helper.go`
 - As it is not possible to add multiple files one by one in a single command, we can use an alternative command:
   - `go run .`
-  - This command will run all the files in the current folder(. signifies the current folder)
+  - This command will run all the files in the current folder("**.**" signifies the current folder)
 - If we have multiple packages and we want to use the each others' code then we can do it by following:
   - Different package should have different folders.
   - E.g., In our case, we have **helper.go** in **helper** folder, making it a different package
